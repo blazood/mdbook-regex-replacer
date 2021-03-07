@@ -1,4 +1,4 @@
-use log::{debug, info};
+use log::{debug};
 use mdbook::preprocess::{Preprocessor, PreprocessorContext, CmdPreprocessor};
 use mdbook::book::Book;
 use mdbook::errors::Error;
@@ -27,7 +27,10 @@ pub struct RegexReplacerItem {
 
 impl Default for RegexReplacerItem {
     fn default() -> Self {
-        todo!()
+        RegexReplacerItem{
+            regex:"".to_string(),
+            rep:"".to_string(),
+        }
     }
 }
 
@@ -40,8 +43,15 @@ pub struct RegexReplacerConfigure {
 
 impl Default for RegexReplacerConfigure{
     fn default() -> Self {
-        todo!()
+        RegexReplacerConfigure{command: Option::None, items: Option::None}
     }
+}
+
+#[test]
+fn test_replace(){
+    let c = (Regex::new("==(?P<c>.+?)==").unwrap(), "<mark>$c</mark>".to_string());
+    let f = replace_all(&c, "==sasasas== s");
+    print!("{}", f);
 }
 
 pub fn replace_all(e: & (Regex, String), s: &str) -> String {
@@ -54,6 +64,7 @@ pub fn handle_each_item(book_item: &mut BookItem, regexes: & Vec<(Regex, String)
 
             for e in regexes {
                 chapter.content = replace_all(e, chapter.content.as_str());
+                debug!("after regex placer: {} => {}:\n{}", e.0, e.1, chapter.content);
             }
 
             for item in &mut chapter.sub_items {
@@ -76,7 +87,6 @@ impl Preprocessor for RegexReplacerPreprocessor {
 
         let config = ctx.config.get_preprocessor(self.name()).unwrap();
         let config_string = toml::to_string(config).unwrap();
-        info!("{}", config_string);
         let regex_replacer_configure: RegexReplacerConfigure = toml::from_str(config_string.as_str()).unwrap();
 
         let mut regexes: Vec<(Regex, String)> = Vec::new();
